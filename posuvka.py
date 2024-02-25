@@ -10,11 +10,11 @@ second_font = ("Helvetica", 10)
 window = Tk()
 window.geometry("750x450")
 window.resizable(False, False)
-window.title("Miele technika s.r.o. - Výpočet nejistoty měření posuvné měřítko")
+window.title("Výpočet nejistoty měření posuvné měřítko")
 window.config(bg=main_color)
 
 # Logo
-logo = PhotoImage(file="img/logo_male130x50.png")
+logo = PhotoImage(file="img/sumixon130x50_black.png")
 
 
 # testutjeme změny co se stane na gitu
@@ -278,7 +278,7 @@ button = Button(count_frame, text="Vypočítej", bg=main_color, activebackground
 button.grid(row=4, column=0, pady=35)
 
 # štítek s právy
-prava = Label(count_frame, text="Copyright © 2024 Miele technika s.r.o.", background=main_color, font=("Helvetica", 7))
-prava.grid(row=5, column=0)
+prava = Label(count_frame, text="Copyright © 2024 Sumixon", background=main_color, font=("Helvetica", 7))
+prava.grid(row=5, column=0, padx=25)
 
 window.mainloop()
