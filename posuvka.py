@@ -13,6 +13,7 @@ window.resizable(False, False)
 window.title("Výpočet nejistoty měření posuvné měřítko")
 window.config(bg=main_color)
 
+
 # Logo
 logo = PhotoImage(file="img/sumixon130x50_black.png")
 
