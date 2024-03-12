@@ -97,13 +97,24 @@ def vypocitej():
         # deklarace abbeho chyby
         abbe = 0.033
         abbeho_chyba_label["text"] = abbe
+        abbe_check = checkbutton_abbe_value.get()
 
         # zkotroluj vzorec a funkčnost u teploty!
         # deklarace teplotního vlivu
-        teplota = round(11.5 * 0.000001 / pow(3, 1 / 3), 5)
+        teplota = round(11.5 * 0.000001 * prumer / pow(3, 1 / 3), 5)
         vliv_teploty_label["text"] = teplota
+        teplota_check = checkbutton_teplota_value.get()
 
         # deklarace a výpočet nejistoty B
+        if abbe_check:
+            abbe = abbe
+        else:
+            abbe = 0
+        if teplota_check:
+            teplota = teplota
+        else:
+            teplota = 0
+
         nej_b = math.sqrt(pow(abbe, 2) + pow(teplota, 2) + pow(chyba_odectu, 2))
 
         # deklarace kombinované nejistoty
@@ -218,7 +229,7 @@ abbeho_chyba_label = Label(text_frame, width=10, font=second_font, bg=main_color
 abbeho_chyba_label.grid(row=3, column=1, padx=5, pady=10, sticky=W)
 
 # Vliv teploty
-vliv_teploty = Label(text_frame, text="Vliv teploty", font=second_font, bg=main_color, padx=10, pady=1)
+vliv_teploty = Label(text_frame, text="Vliv teploty 21 ± 1 °C", font=second_font, bg=main_color, padx=10, pady=1)
 vliv_teploty.grid(row=4, column=0, padx=5, pady=10, sticky=W)
 
 vliv_teploty_label = Label(text_frame, width=10, font=second_font, bg=main_color,
@@ -281,13 +292,17 @@ button.grid(row=4, column=0, pady=35)
 # Zaškrtávací tlačítko
 
 checkbutton_abbe_value = BooleanVar()
-checkbutton_abbe = Checkbutton(text_frame, activebackground=main_color, highlightcolor=main_color, highlightbackground=main_color, bg=main_color, text="Zahrnout\ndo výpočtu", variable=checkbutton_abbe_value, command="")
+checkbutton_abbe =Checkbutton(text_frame, activebackground=main_color, highlightcolor=main_color,
+                               highlightbackground=main_color, bg=main_color, text="Zahrnout\ndo výpočtu",
+                               variable=checkbutton_abbe_value, state="normal", command="")
 checkbutton_abbe.grid(row=3, column=2, padx=5, pady=5)
 
-
 checkbutton_teplota_value = BooleanVar()
-checkbutton_teplota = Checkbutton(text_frame, activebackground=main_color, highlightcolor=main_color, highlightbackground=main_color, bg=main_color, text="Zahrnout\ndo výpočtu", variable=checkbutton_teplota_value, command="")
+checkbutton_teplota = Checkbutton(text_frame, activebackground=main_color, highlightcolor=main_color,
+                                  highlightbackground=main_color, bg=main_color, text="Zahrnout\ndo výpočtu",
+                                  variable=checkbutton_teplota_value, command="")
 checkbutton_teplota.grid(row=4, column=2, padx=5, pady=5)
+
 # štítek s právy
 prava = Label(count_frame, text="Copyright © 2024 Sumixon", background=main_color, font=("Helvetica", 7))
 prava.grid(row=5, column=0, padx=25)
