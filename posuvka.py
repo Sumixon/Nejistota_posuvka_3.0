@@ -8,11 +8,12 @@ second_font = ("Helvetica", 10)
 
 #  Okno
 window = Tk()
-window.geometry("750x450")
+width = 850
+height = 450
+window.config(width=width, height=height)
 window.resizable(False, False)
 window.title("Výpočet nejistoty měření posuvné měřítko")
 window.config(bg=main_color)
-
 
 # Logo
 logo = PhotoImage(file="img/sumixon130x50_black.png")
@@ -147,15 +148,15 @@ listbox_frame.place(x=5, y=150)
 
 text_frame = LabelFrame(window, text="Výpočet nejistoty", padx=5, pady=5)
 text_frame.config(bg="grey")
-text_frame.place(x=155, y=5, width=400, height=440)
+text_frame.place(x=155, y=5, width=500, height=440)
 
 others_frame = LabelFrame(window, text="***", padx=5, pady=5)
 others_frame.config(bg=main_color)
-others_frame.place(x=565, y=5, width=180, height=230)
+others_frame.place(x=665, y=5, width=180, height=230)
 
 count_frame = LabelFrame(window, text="***", padx=5, pady=5)
 count_frame.config(bg=main_color)
-count_frame.place(x=565, y=305, width=180, height=140)
+count_frame.place(x=665, y=305, width=180, height=140)
 
 # Definování prvků programu
 
@@ -190,10 +191,10 @@ input_entry_1.grid(row=1, column=0, padx=5, pady=10)
 
 # Vstup rozlišení měřidla
 rozliseni_meridla = Label(text_frame, text="Zadej rozlišení měřidla", font=main_font, bg=main_color, padx=10, pady=1)
-rozliseni_meridla.grid(row=0, column=0, padx=5, pady=10, sticky=W)
+rozliseni_meridla.grid(row=0, column=0, padx=5, pady=20, sticky=W)
 
 input_rozliseni_entry = Entry(text_frame, width=14, bg=main_color, border=2, justify=CENTER)
-input_rozliseni_entry.grid(row=0, column=1, padx=5, pady=10, sticky=W)
+input_rozliseni_entry.grid(row=0, column=1, padx=5, pady=20, sticky=W)
 
 # Výpočet nejistoty A - Label (text a výsledek)
 
@@ -251,13 +252,12 @@ rozsirena_nejistota_label.grid(row=7, column=1, padx=5, pady=10, sticky=W)
 
 # Výsledek měření
 vysledek_mereni = Label(text_frame, text="Výsledek měření", font=main_font, bg=main_color, padx=10, pady=1,
-                        foreground="#8B0013")
-vysledek_mereni.grid(row=8, column=0, padx=5, pady=20, sticky=W)
+                        foreground="#8B0013", justify=CENTER)
+vysledek_mereni.grid(row=6, column=2, padx=5, pady=5)
 
-vysledek_mereni_label_1 = Label(text_frame, width=20, font=second_font, bg=main_color,
+vysledek_mereni_label_1 = Label(text_frame, width=20, height=2, font=second_font, bg=main_color,
                                 highlightbackground="#8B0013", highlightthickness=2, foreground="#8B0013")
-vysledek_mereni_label_1.grid(row=8, column=1, padx=5, pady=15, sticky=W)
-
+vysledek_mereni_label_1.grid(row=7, column=2, padx=15)
 # Logo
 logo_label = Label(others_frame, width=130, height=50, image=logo, bg=main_color)
 logo_label.logo = logo
@@ -278,6 +278,16 @@ vystraha.grid(row=3, column=0, pady=5)
 button = Button(count_frame, text="Vypočítej", bg=main_color, activebackground=main_color, command=vypocitej)
 button.grid(row=4, column=0, pady=35)
 
+# Zaškrtávací tlačítko
+
+checkbutton_abbe_value = BooleanVar()
+checkbutton_abbe = Checkbutton(text_frame, activebackground=main_color, highlightcolor=main_color, highlightbackground=main_color, bg=main_color, text="Zahrnout\ndo výpočtu", variable=checkbutton_abbe_value, command="")
+checkbutton_abbe.grid(row=3, column=2, padx=5, pady=5)
+
+
+checkbutton_teplota_value = BooleanVar()
+checkbutton_teplota = Checkbutton(text_frame, activebackground=main_color, highlightcolor=main_color, highlightbackground=main_color, bg=main_color, text="Zahrnout\ndo výpočtu", variable=checkbutton_teplota_value, command="")
+checkbutton_teplota.grid(row=4, column=2, padx=5, pady=5)
 # štítek s právy
 prava = Label(count_frame, text="Copyright © 2024 Sumixon", background=main_color, font=("Helvetica", 7))
 prava.grid(row=5, column=0, padx=25)
