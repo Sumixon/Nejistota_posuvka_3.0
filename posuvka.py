@@ -1,5 +1,7 @@
 from tkinter import *
 import math
+from tkinter import ttk
+
 
 # Definování stylů
 main_color = "grey"
@@ -143,6 +145,31 @@ def vypocitej():
 
 # Zmáčknutí entru pro vložení hodnoty
 window.bind("<Return>", add_text_enter)
+
+hlavniMenu = Menu(window)
+
+# vytvořit rozbalovací menu a přidat ho k hlavnímu menu
+menuSoubor = Menu(hlavniMenu, tearoff=0, bg=main_color, activeborderwidth=5, borderwidth=0)
+menuSoubor.add_command(label="Otevřít")
+menuSoubor.add_command(label="Uložit")
+menuSoubor.add_separator()
+menuSoubor.add_command(label="Pryč", command=window.quit)
+hlavniMenu.add_cascade(label="Soubor", menu=menuSoubor)
+
+# další rozbalovací menu
+menuUpravy = Menu(hlavniMenu, tearoff=0, bg=main_color)
+menuUpravy.add_command(label="Vyjmout")
+menuUpravy.add_command(label="Kopírovat")
+menuUpravy.add_command(label="Vložit")
+hlavniMenu.add_cascade(label="Upravit", menu=menuUpravy)
+
+menuNapoveda = Menu(hlavniMenu, tearoff=0, bg=main_color)
+menuNapoveda.add_command(label="O aplikaci")
+hlavniMenu.add_cascade(label="Nápověda", menu=menuNapoveda)
+
+# zobrazení menu
+window.config(menu=hlavniMenu, bg=main_color)
+
 
 # Definování framů
 input_frame = LabelFrame(window, text="Naměřené hodnoty", padx=1, pady=1)
