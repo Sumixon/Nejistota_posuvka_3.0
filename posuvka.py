@@ -1,7 +1,5 @@
 from tkinter import *
 import math
-from tkinter import ttk
-
 
 # Definování stylů
 main_color = "grey"
@@ -21,7 +19,7 @@ window.config(bg=main_color)
 logo = PhotoImage(file="img/sumixon130x50_black.png")
 
 
-# testutjeme změny co se stane na gitu
+# Testutjeme změny co se stane na gitu
 # Funkce
 
 def add_text_enter(event):
@@ -33,7 +31,7 @@ def add_text_enter(event):
         carka = input_entry_1.get()
         if carka.__contains__(","):
             oprava = carka.replace(",", ".")
-            # přidání úkolu do textového pole
+            # Přidání úkolu do textového pole
             list_box.insert(END, oprava)
             input_entry_1.delete(0, END)
         else:
@@ -49,7 +47,7 @@ def add_text():
         carka = input_entry_1.get()
         if carka.__contains__(","):
             oprava = carka.replace(",", ".")
-            # přidání úkolu do textového pole
+            # Přidání úkolu do textového pole
             list_box.insert(END, oprava)
             input_entry_1.delete(0, END)
         else:
@@ -58,7 +56,7 @@ def add_text():
 
 
 def remove_text_item():
-    # odstraní položku seznamu
+    # Odstraní položku seznamu
     list_box.delete(ANCHOR)
     pocet_zadanych_hodnot["text"] = ""
 
@@ -72,19 +70,19 @@ def vypocitej():
         for x in seznam_vstupu_flout:
             seznam_vstupu.append(float(x))
 
-        # výpočet součtu a průměru
+        # Výpočet součtu a průměru
         soucet = sum(seznam_vstupu)
         prumer = soucet / len(seznam_vstupu)
-        # vytvoření další proměné pro cyklus, kterým sečteme umocněné rozdíly proměných a průměru
+        # Vytvoření další proměné pro cyklus, kterým sečteme umocněné rozdíly proměných a průměru
         soucet_2 = 0
         for x in seznam_vstupu:
             soucet_2 = pow(x - prumer, 2) + soucet_2
-        # konečný výpočet nejistoty A
+        # Konečný výpočet nejistoty A
         sumax = soucet_2 / (len(seznam_vstupu) * (len(seznam_vstupu) - 1))
         nej_a = round(math.sqrt(sumax), 3)
         nejistota_a_label_2.config(text=nej_a)
 
-        # deklarace promněné rozlišení měřidla a výpočet chyby pro další postup
+        # Deklarace promněné rozlišení měřidla a výpočet chyby pro další postup
         carka = input_rozliseni_entry.get()
         if carka.__contains__(","):
             oprava = carka.replace(",", ".")
@@ -96,18 +94,18 @@ def vypocitej():
         chyba_odectu = rozliseni / 2
         chyba_odectu_label["text"] = chyba_odectu
 
-        # deklarace abbeho chyby
+        # Deklarace abbeho chyby
         abbe = 0.033
         abbeho_chyba_label["text"] = abbe
         abbe_check = checkbutton_abbe_value.get()
 
-        # zkotroluj vzorec a funkčnost u teploty!
-        # deklarace teplotního vlivu
+        # Zkotroluj vzorec a funkčnost u teploty!
+        # Deklarace teplotního vlivu
         teplota = round(11.5 * 0.000001 * prumer / pow(3, 1 / 3), 5)
         vliv_teploty_label["text"] = teplota
         teplota_check = checkbutton_teplota_value.get()
 
-        # deklarace a výpočet nejistoty B
+        # Deklarace a výpočet nejistoty B
         if abbe_check:
             abbe = abbe
         else:
@@ -119,15 +117,15 @@ def vypocitej():
 
         nej_b = math.sqrt(pow(abbe, 2) + pow(teplota, 2) + pow(chyba_odectu, 2))
 
-        # deklarace kombinované nejistoty
+        # Deklarace kombinované nejistoty
         komb_nej = round(math.sqrt(pow(nej_a, 2) + pow(nej_b, 2)), 3)
         kombinovana_nejistota_label["text"] = komb_nej
 
-        # deklarace a výpočet rozšířené nejistoty
+        # Deklarace a výpočet rozšířené nejistoty
         roz_nej_u = komb_nej * 2
         rozsirena_nejistota_label["text"] = roz_nej_u
 
-        # výpis výsledku
+        # Výpis výsledku
         prumer_pro_vysledek = round(prumer, 2)
         roz_nej_u_vysledek = round(roz_nej_u, 2)
         vysledek_mereni_label_1["text"] = f"{prumer_pro_vysledek} ± {roz_nej_u_vysledek} mm"
@@ -146,17 +144,17 @@ def vypocitej():
 # Zmáčknutí entru pro vložení hodnoty
 window.bind("<Return>", add_text_enter)
 
-hlavniMenu = Menu(window)
+hlavniMenu = Menu(window, bg=main_color)
 
-# vytvořit rozbalovací menu a přidat ho k hlavnímu menu
+# Vytvořit rozbalovací menu a přidat ho k hlavnímu menu
 menuSoubor = Menu(hlavniMenu, tearoff=0, bg=main_color, activeborderwidth=5, borderwidth=0)
 menuSoubor.add_command(label="Otevřít")
 menuSoubor.add_command(label="Uložit")
 menuSoubor.add_separator()
-menuSoubor.add_command(label="Pryč", command=window.quit)
+menuSoubor.add_command(label="Ukončit", command=window.quit)
 hlavniMenu.add_cascade(label="Soubor", menu=menuSoubor)
 
-# další rozbalovací menu
+# Další rozbalovací menu
 menuUpravy = Menu(hlavniMenu, tearoff=0, bg=main_color)
 menuUpravy.add_command(label="Vyjmout")
 menuUpravy.add_command(label="Kopírovat")
@@ -167,9 +165,8 @@ menuNapoveda = Menu(hlavniMenu, tearoff=0, bg=main_color)
 menuNapoveda.add_command(label="O aplikaci")
 hlavniMenu.add_cascade(label="Nápověda", menu=menuNapoveda)
 
-# zobrazení menu
-window.config(menu=hlavniMenu, bg=main_color)
-
+# Zobrazení menu
+window.config(menu=hlavniMenu)
 
 # Definování framů
 input_frame = LabelFrame(window, text="Naměřené hodnoty", padx=1, pady=1)
@@ -210,16 +207,16 @@ list_box.grid(row=0, column=0, sticky=E + N)
 # Propojení Scrollbaru s listboxem, aby fungoval posuvník (vymaž závorky, které se tamdávají navíc)
 text_scrollbar.config(command=list_box.yview)
 
-# input_entry_button
+# Input_entry_button
 add_button = Button(button_frame, text="Zadej", borderwidth=2, font=second_font, bg=main_color, command=add_text)
 add_button.grid(row=0, column=0, padx=7, pady=5)
 
-# delete button
+# Delete button
 remove_button = Button(button_frame, text="Odstranit", borderwidth=2, font=second_font, bg=main_color,
                        command=remove_text_item)
 remove_button.grid(row=0, column=1, padx=5, pady=5, sticky=W)
-# Vstup naměřených hodnot
 
+# Vstup naměřených hodnot
 input_label_text = Label(input_frame, text="Zadej hodnoty", font=second_font,
                          bg=main_color, padx=10, pady=10, wraplength=150)
 input_label_text.grid(row=0, column=0)
@@ -301,14 +298,14 @@ logo_label = Label(others_frame, width=130, height=50, image=logo, bg=main_color
 logo_label.logo = logo
 logo_label.grid(row=0, column=0, padx=20, pady=0)
 
-# počet zadaných hodnot
+# Počet zadaných hodnot
 pocet_zadanych = Label(others_frame, text="Počet zadaných hodnot", bg=main_color, font=second_font,
                        highlightbackground="#8B0013", highlightthickness=1, foreground="#8B0013")
 pocet_zadanych.grid(row=1, column=0, pady=10)
 pocet_zadanych_hodnot = Label(others_frame, bg=main_color, foreground="#8B0013", font=("Helvetica,", 20))
 pocet_zadanych_hodnot.grid(row=2, column=0)
 
-# štítek výstrahy
+# Štítek výstrahy
 vystraha = Label(others_frame, bg=main_color, foreground="#8B0013", font=second_font, wraplength=150)
 vystraha.grid(row=3, column=0, pady=5)
 
@@ -318,19 +315,20 @@ button.grid(row=4, column=0, pady=35)
 
 # Zaškrtávací tlačítko
 
-checkbutton_abbe_value = BooleanVar()
-checkbutton_abbe =Checkbutton(text_frame, activebackground=main_color, highlightcolor=main_color,
+checkbutton_abbe_value = BooleanVar(value=True)
+checkbutton_abbe = Checkbutton(text_frame, activebackground=main_color, highlightcolor=main_color,
                                highlightbackground=main_color, bg=main_color, text="Zahrnout\ndo výpočtu",
                                variable=checkbutton_abbe_value, state="normal", command="")
 checkbutton_abbe.grid(row=3, column=2, padx=5, pady=5)
 
-checkbutton_teplota_value = BooleanVar()
+
+checkbutton_teplota_value = BooleanVar(value=True)
 checkbutton_teplota = Checkbutton(text_frame, activebackground=main_color, highlightcolor=main_color,
                                   highlightbackground=main_color, bg=main_color, text="Zahrnout\ndo výpočtu",
                                   variable=checkbutton_teplota_value, command="")
 checkbutton_teplota.grid(row=4, column=2, padx=5, pady=5)
 
-# štítek s právy
+# Štítek s právy
 prava = Label(count_frame, text="Copyright © 2024 Sumixon", background=main_color, font=("Helvetica", 7))
 prava.grid(row=5, column=0, padx=25)
 
