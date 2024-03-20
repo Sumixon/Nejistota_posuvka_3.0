@@ -19,7 +19,7 @@ window.config(bg=main_color)
 logo = PhotoImage(file="img/sumixon130x50_black.png")
 
 
-# Testutjeme změny co se stane na gitu
+
 # Funkce
 
 def add_text_enter(event):
@@ -144,10 +144,11 @@ def vypocitej():
 # Zmáčknutí entru pro vložení hodnoty
 window.bind("<Return>", add_text_enter)
 
-hlavniMenu = Menu(window, bg=main_color)
+# Hlavní menu
+hlavniMenu = Menu(window, background=main_color)
 
 # Vytvořit rozbalovací menu a přidat ho k hlavnímu menu
-menuSoubor = Menu(hlavniMenu, tearoff=0, bg=main_color, activeborderwidth=5, borderwidth=0)
+menuSoubor = Menu(hlavniMenu, tearoff=0, bg=main_color)
 menuSoubor.add_command(label="Otevřít")
 menuSoubor.add_command(label="Uložit")
 menuSoubor.add_separator()
