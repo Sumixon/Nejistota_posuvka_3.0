@@ -1,6 +1,7 @@
 from tkinter import *
 import math
 
+
 # Definování stylů
 main_color = "grey"
 main_font = ("Helvetica", 12)
@@ -10,10 +11,10 @@ second_font = ("Helvetica", 10)
 window = Tk()
 width = 850
 height = 450
-window.config(width=width, height=height)
+window.config(width=width, height=height, bg=main_color)
 window.resizable(False, False)
 window.title("Výpočet nejistoty měření posuvné měřítko")
-window.config(bg=main_color)
+
 
 # Logo
 logo = PhotoImage(file="img/sumixon130x50_black.png")
