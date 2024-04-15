@@ -62,6 +62,11 @@ def remove_text_item():
     list_box.delete(ANCHOR)
     pocet_zadanych_hodnot["text"] = ""
 
+def remove_all_text_item():
+    # Odstraní položku seznamu
+    list_box.delete(0, END)
+    pocet_zadanych_hodnot["text"] = ""
+
 
 def vypocitej():
     rozliseni_meridla.config(foreground="black")
@@ -147,7 +152,7 @@ def vypocitej():
 window.bind("<Return>", add_text_enter)
 
 # Hlavní menu
-hlavniMenu = Menu(window, background=main_color)
+hlavniMenu = Menu(window)
 
 # Vytvořit rozbalovací menu a přidat ho k hlavnímu menu
 menuSoubor = Menu(hlavniMenu, tearoff=0, bg=main_color)
@@ -178,11 +183,11 @@ input_frame.place(x=5, y=5, width=140, height=100)
 
 button_frame = LabelFrame(window, text="", padx=1, pady=1)
 button_frame.config(bg=main_color)
-button_frame.place(x=5, y=400, width=141, height=44)
+button_frame.place(x=5, y=350, width=141, height=94)
 
 listbox_frame = LabelFrame(window, text="", padx=1, pady=1)
 listbox_frame.config(bg=main_color)
-listbox_frame.place(x=5, y=150)
+listbox_frame.place(x=5, y=110)
 
 text_frame = LabelFrame(window, text="Výpočet nejistoty", padx=5, pady=5)
 text_frame.config(bg="grey")
@@ -211,13 +216,18 @@ list_box.grid(row=0, column=0, sticky=E + N)
 text_scrollbar.config(command=list_box.yview)
 
 # Input_entry_button
-add_button = Button(button_frame, text="Zadej", borderwidth=2, font=second_font, bg=main_color, command=add_text)
-add_button.grid(row=0, column=0, padx=7, pady=5)
+add_button = Button(window, text="Zadej", borderwidth=2, font=second_font, bg=main_color, command=add_text)
+add_button.place(x=20, y=370)
 
 # Delete button
-remove_button = Button(button_frame, text="Odstranit", borderwidth=2, font=second_font, bg=main_color,
+remove_button = Button(window, text="Odstranit", borderwidth=2, font=second_font, bg=main_color,
                        command=remove_text_item)
-remove_button.grid(row=0, column=1, padx=5, pady=5, sticky=W)
+remove_button.place(x=70, y=370)
+
+# Delete_all button
+delete_all_button = Button(window,text="Odstraň vše",borderwidth=2, font=second_font, bg=main_color,
+                       command=remove_all_text_item)
+delete_all_button.place(x=33, y=405)
 
 # Vstup naměřených hodnot
 input_label_text = Label(input_frame, text="Zadej hodnoty", font=second_font,
