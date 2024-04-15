@@ -1,4 +1,5 @@
 from tkinter import *
+from tkinter import ttk
 import math
 
 
@@ -173,7 +174,7 @@ window.config(menu=hlavniMenu)
 # Definování framů
 input_frame = LabelFrame(window, text="Naměřené hodnoty", padx=1, pady=1)
 input_frame.config(bg=main_color)
-input_frame.place(x=5, y=5, width=140, height=130)
+input_frame.place(x=5, y=5, width=140, height=100)
 
 button_frame = LabelFrame(window, text="", padx=1, pady=1)
 button_frame.config(bg=main_color)
