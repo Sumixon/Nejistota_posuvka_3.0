@@ -1,6 +1,8 @@
 import math
 import tkinter as tk
 import customtkinter as ctk
+from matplotlib.figure import Figure
+from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
 
 
 # Definování stylů
@@ -155,6 +157,95 @@ def vypocitej():
     roz_nej_u_vysledek = round(roz_nej_u, 2)
     vysledek_mereni_label_1.configure(text=f"{prumer_pro_vysledek} ± {roz_nej_u_vysledek} mm")
     pocet_zadanych_hodnot.configure(text=str(len(seznam_vstupu)))
+
+    # Ulož aktuální statistiky pro případné použití v grafu
+    global posledni_prumer, posledni_rozsirena_nejistota
+    posledni_prumer = prumer
+    posledni_rozsirena_nejistota = roz_nej_u
+
+
+def zobraz_graf():
+    """Zobrazí nové okno s grafem hodnot, průměrem a bias + nejistota jako errorbar."""
+
+    # Znovu použijeme stejné kontroly jako ve vypocitej()
+    seznam_text = list_box.get(0, tk.END)
+    if len(seznam_text) < 2:
+        vystraha.configure(text="Pro graf zadej minimálně dvě hodnoty.")
+        return
+
+    try:
+        hodnoty = [float(x) for x in seznam_text]
+    except ValueError:
+        vystraha.configure(text="Některá zadaná hodnota není číslo.")
+        return
+
+    # Spočítáme průměr a rozšířenou nejistotu stejně jako ve vypocitej()
+    soucet = sum(hodnoty)
+    prumer = soucet / len(hodnoty)
+
+    soucet_2 = 0
+    for x in hodnoty:
+        soucet_2 = pow(x - prumer, 2) + soucet_2
+
+    sumax = soucet_2 / (len(hodnoty) * (len(hodnoty) - 1))
+    nej_a = math.sqrt(sumax)
+
+    # Rozlišení
+    carka = input_rozliseni_entry.get().strip()
+    if not carka:
+        vystraha.configure(text="Pro graf zadej také rozlišení měřidla.")
+        return
+    if "," in carka:
+        carka = carka.replace(",", ".")
+    try:
+        rozliseni = float(carka)
+    except ValueError:
+        vystraha.configure(text="Rozlišení měřidla musí být číslo.")
+        return
+
+    chyba_odectu = rozliseni / 2
+
+    # Abbeho chyba a vliv teploty podle zaškrtávacích tlačítek
+    abbe = 0.033
+    teplota = round(11.5 * 0.000001 * prumer / pow(3, 1 / 3), 5)
+
+    if not checkbutton_abbe_value.get():
+        abbe = 0
+    if not checkbutton_teplota_value.get():
+        teplota = 0
+
+    nej_b = math.sqrt(pow(abbe, 2) + pow(teplota, 2) + pow(chyba_odectu, 2))
+    komb_nej = math.sqrt(pow(nej_a, 2) + pow(nej_b, 2))
+    roz_nej_u = komb_nej * 2
+
+    # Připravíme data pro graf
+    x_indexy = list(range(1, len(hodnoty) + 1))
+    biasy = [h - prumer for h in hodnoty]
+
+    # Vytvoříme nové okno pro graf
+    okno_graf = ctk.CTkToplevel(window)
+    okno_graf.title("Graf naměřených hodnot a nejistoty")
+    okno_graf.geometry("800x500")
+
+    fig = Figure(figsize=(7, 4), dpi=100)
+    ax = fig.add_subplot(111)
+
+    # Hlavní vodorovná čára = průměr
+    ax.axhline(prumer, color="tab:blue", linestyle="--", label="Průměr")
+
+    # Body měření s errorbary ± rozšířená nejistota
+    ax.errorbar(x_indexy, hodnoty, yerr=[roz_nej_u] * len(hodnoty), fmt="o", color="tab:red",
+                ecolor="gray", elinewidth=1, capsize=4, label="Hodnoty ± U")
+
+    ax.set_xlabel("Pořadí měření")
+    ax.set_ylabel("Hodnota [mm]")
+    ax.set_title("Naměřené hodnoty, průměr a rozšířená nejistota")
+    ax.grid(True, linestyle=":", alpha=0.5)
+    ax.legend()
+
+    canvas = FigureCanvasTkAgg(fig, master=okno_graf)
+    canvas.draw()
+    canvas.get_tk_widget().pack(fill="both", expand=True)
 
 # Hlavní menu
 hlavniMenu = tk.Menu(window)
@@ -353,9 +444,12 @@ pocet_zadanych_hodnot.grid(row=2, column=0)
 vystraha = ctk.CTkLabel(others_frame, text="", text_color="#8B0013", font=second_font, wraplength=150)
 vystraha.grid(row=3, column=0, pady=5)
 
-# Tlačítko
+# Tlačítka ve spodním panelu
 button = ctk.CTkButton(count_frame, text="Vypočítej", command=vypocitej, width=120)
-button.grid(row=4, column=0, pady=35)
+button.grid(row=4, column=0, pady=(20, 5))
+
+graf_button = ctk.CTkButton(count_frame, text="Graf", command=zobraz_graf, width=120)
+graf_button.grid(row=5, column=0, pady=(0, 10))
 
 # Zaškrtávací tlačítko
 
@@ -372,7 +466,7 @@ checkbutton_teplota.grid(row=5, column=2, padx=5, pady=5)
 
 # Štítek s právy
 prava = ctk.CTkLabel(count_frame, text="Copyright © 2024 Sumixon", font=("Helvetica", 9))
-prava.grid(row=5, column=0, padx=25)
+prava.grid(row=6, column=0, padx=25)
 
 # Zmáčknutí entru pro vložení hodnoty jen v poli vstupu
 window.mainloop()
