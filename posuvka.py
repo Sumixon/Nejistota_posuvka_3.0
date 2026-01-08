@@ -450,7 +450,7 @@ input_rozliseni_entry.grid(row=1, column=1, padx=5, pady=20, sticky="w")
 nejistota_a_label = ctk.CTkLabel(text_frame, text="Nejistota typu A", font=second_font)
 nejistota_a_label.grid(row=2, column=0, padx=5, pady=10, sticky="w")
 
-nejistota_a_label_2 = ctk.CTkLabel(text_frame, width=80, font=second_font)
+nejistota_a_label_2 = ctk.CTkLabel(text_frame, width=80, font=second_font, text="")
 nejistota_a_label_2.grid(row=2, column=1, padx=5, pady=10, sticky="w")
 
 # Složky nejistoty tybu B
@@ -461,28 +461,28 @@ nejistota_b_label.grid(row=3, column=0, padx=5, pady=10, sticky="w")
 abbeho_chyba = ctk.CTkLabel(text_frame, text="Abbeho chyba", font=second_font)
 abbeho_chyba.grid(row=4, column=0, padx=5, pady=10, sticky="w")
 
-abbeho_chyba_label = ctk.CTkLabel(text_frame, width=80, font=second_font)
+abbeho_chyba_label = ctk.CTkLabel(text_frame, width=80, font=second_font, text="")
 abbeho_chyba_label.grid(row=4, column=1, padx=5, pady=10, sticky="w")
 
 # Vliv teploty
 vliv_teploty = ctk.CTkLabel(text_frame, text="Vliv teploty 21 ± 1 °C", font=second_font)
 vliv_teploty.grid(row=5, column=0, padx=5, pady=10, sticky="w")
 
-vliv_teploty_label = ctk.CTkLabel(text_frame, width=80, font=second_font)
+vliv_teploty_label = ctk.CTkLabel(text_frame, width=80, font=second_font, text="")
 vliv_teploty_label.grid(row=5, column=1, padx=5, pady=10, sticky="w")
 
 # Chyba odečtu
 chyba_odectu_text = ctk.CTkLabel(text_frame, text="Chyba odečtu", font=second_font)
 chyba_odectu_text.grid(row=6, column=0, padx=5, pady=10, sticky="w")
 
-chyba_odectu_label = ctk.CTkLabel(text_frame, width=80, font=second_font)
+chyba_odectu_label = ctk.CTkLabel(text_frame, width=80, font=second_font, text="")
 chyba_odectu_label.grid(row=6, column=1, padx=5, pady=10, sticky="w")
 
 # Kombinovaná nejistota A/B
 kombinovana_nejistota = ctk.CTkLabel(text_frame, text="Kombinovaná nejistota A/B", font=second_font)
 kombinovana_nejistota.grid(row=7, column=0, padx=5, pady=10, sticky="w")
 
-kombinovana_nejistota_label = ctk.CTkLabel(text_frame, width=80, font=second_font)
+kombinovana_nejistota_label = ctk.CTkLabel(text_frame, width=80, font=second_font, text="")
 kombinovana_nejistota_label.grid(row=7, column=1, padx=5, pady=10, sticky="w")
 
 # Rozšířená nejistota U
@@ -497,7 +497,7 @@ vysledek_mereni = ctk.CTkLabel(text_frame, text="Výsledek měření", font=main
                                justify="center")
 vysledek_mereni.grid(row=7, column=2, padx=5, pady=5)
 
-vysledek_mereni_label_1 = ctk.CTkLabel(text_frame, width=160, height=40, font=second_font,
+vysledek_mereni_label_1 = ctk.CTkLabel(text_frame, width=160, height=40, font=second_font, text="",
                                        text_color="#8B0013")
 vysledek_mereni_label_1.grid(row=8, column=2, padx=15)
 # Logo
