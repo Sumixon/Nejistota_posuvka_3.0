@@ -1,16 +1,21 @@
 import math
+import os
 from datetime import datetime
 import tkinter as tk
 import customtkinter as ctk
 from matplotlib.figure import Figure
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
 from tkinter import filedialog as fd
+import matplotlib.image as mpimg
 
 
-# Definování stylů
+# Definování stylů a cest
 main_color = "grey"
 main_font = ("Helvetica", 16)
 second_font = ("Helvetica", 14)
+
+# Výchozí logo pro aplikaci i PDF protokol (lze změnit na jiný soubor)
+PROTOCOL_LOGO_PATH = "img/sumixon130x50_black.png"
 
 ctk.set_appearance_mode("system")
 ctk.set_default_color_theme("blue")
@@ -27,7 +32,7 @@ def change_theme(mode: str):
 
 #  Okno
 window = ctk.CTk()
-width = 1100
+width = 1150
 height = 650
 window.geometry(f"{width}x{height}")
 window.minsize(width, height)
@@ -35,8 +40,180 @@ window.resizable(True, True)
 window.title("Výpočet nejistoty měření posuvné měřítko")
 
 
-# Logo
-logo = tk.PhotoImage(file="img/sumixon130x50_black.png")
+# Logo v GUI
+logo = tk.PhotoImage(file=PROTOCOL_LOGO_PATH)
+
+
+def vytvor_protokol_figure(
+    hodnoty,
+    prumer,
+    roz_nej_u,
+    nominal,
+    spod_mez,
+    horni_mez,
+    cislo_protokolu,
+    operator_mereni,
+    pouzite_meridlo,
+    nazev,
+    matcislo,
+    poznamka_proto,
+    x_indexy,
+):
+    """Vytvoří a vrátí Figure ve formátu A4 s hlavičkou, textovými položkami a grafem.
+
+    Funkce se používá jak pro zobrazení v okně, tak pro export do PDF.
+    """
+
+    # A4 na výšku (~8.27 x 11.69 palců)
+    A4_WIDTH_INCH = 8.27
+    A4_HEIGHT_INCH = 11.69
+    fig = Figure(figsize=(A4_WIDTH_INCH, A4_HEIGHT_INCH), dpi=100)
+
+    # Tři oblasti: hlavička (logo + nadpis + číslo protokolu), textové položky, graf
+    header_ax = fig.add_axes([0.05, 0.80, 0.90, 0.18])
+    text_ax = fig.add_axes([0.05, 0.42, 0.90, 0.34])
+    ax = fig.add_axes([0.10, 0.07, 0.82, 0.30])
+
+    header_ax.axis("off")
+    text_ax.axis("off")
+
+    # Výchozí texty, pokud uživatel nic nezadal (použito i v hlavičce)
+    cislo_protokolu_fmt = cislo_protokolu if cislo_protokolu else "—"
+
+    # Hlavička protokolu: logo uprostřed, pod ním nadpis a číslo protokolu
+    header_ax.set_xlim(0, 1)
+    header_ax.set_ylim(0, 1)
+
+    if os.path.exists(PROTOCOL_LOGO_PATH):
+        try:
+            logo_img = mpimg.imread(PROTOCOL_LOGO_PATH)
+            # Zachování poměru stran loga, menší výška aby se neroztahovalo
+            logo_height = 0.20
+            logo_width = logo_height * (logo_img.shape[1] / logo_img.shape[0])
+            logo_x_min = 0.5 - logo_width / 2
+            logo_x_max = 0.5 + logo_width / 2
+            logo_y_min = 0.65
+            logo_y_max = logo_y_min + logo_height
+            header_ax.imshow(
+                logo_img,
+                extent=[logo_x_min, logo_x_max, logo_y_min, logo_y_max],
+                aspect="equal",
+            )
+        except Exception:
+            # Pokud se logo nepodaří načíst, hlavička bude jen textová
+            pass
+
+    # Nadpis protokolu a číslo protokolu, obojí centrované
+    header_ax.text(
+        0.5,
+        0.40,
+        "PROTOKOL O MĚŘENÍ – posuvné měřítko",
+        ha="center",
+        va="center",
+        fontsize=18,
+        fontweight="bold",
+    )
+    header_ax.text(
+        0.5,
+        0.18,
+        f"Číslo protokolu: {cislo_protokolu_fmt}",
+        ha="center",
+        va="center",
+        fontsize=12,
+    )
+
+    # Plné čáry: nominální hodnota a tolerance (graf dole na stránce)
+    ax.axhline(nominal, color="tab:green", linestyle="-", label="Nominální hodnota")
+    ax.axhline(spod_mez, color="tab:gray", linestyle="-", label="Spodní tolerance")
+    ax.axhline(horni_mez, color="tab:gray", linestyle="-", label="Horní tolerance")
+
+    # Pruhovaná čára = průměr
+    ax.axhline(prumer, color="tab:blue", linestyle="--", label="Průměr")
+
+    # Body měření s errorbary ± rozšířená nejistota
+    ax.errorbar(
+        x_indexy,
+        hodnoty,
+        yerr=[roz_nej_u] * len(hodnoty),
+        fmt="o",
+        color="tab:red",
+        ecolor="gray",
+        elinewidth=1,
+        capsize=4,
+        label="Hodnoty ± U",
+    )
+
+    # Nastavení osy Y tak, aby byl prostor i pro hodnoty mimo tolerance
+    vsechny_y = hodnoty + [nominal, spod_mez, horni_mez]
+    y_min = min(vsechny_y)
+    y_max = max(vsechny_y)
+    rozsah = y_max - y_min if y_max != y_min else max(1.0, abs(y_max))
+    mezera = 0.2 * rozsah
+    ax.set_ylim(y_min - mezera, y_max + mezera)
+
+    ax.set_xlabel("Pořadí měření")
+    ax.set_ylabel("Hodnota [mm]")
+    ax.set_title("Naměřené hodnoty, průměr, nominál a tolerance")
+    ax.grid(True, linestyle=":", alpha=0.5)
+    ax.legend(loc="best")
+
+    # Text s informacemi a hodnotami NAD grafem (textové položky jako první)
+    hodnoty_text = ", ".join(f"{h:.4f}" for h in hodnoty)
+    datum_mereni = datetime.now().strftime("%d.%m.%Y %H:%M")
+
+    # Vyhodnocení shody s tolerancemi včetně nejistoty
+    dolni_hranice_s_U = prumer - roz_nej_u
+    horni_hranice_s_U = prumer + roz_nej_u
+
+    if horni_hranice_s_U <= horni_mez and dolni_hranice_s_U >= spod_mez:
+        vyhodnoceni_text = "VYHOVUJE (interval měření včetně nejistoty je celý v toleranci)."
+    elif dolni_hranice_s_U > horni_mez or horni_hranice_s_U < spod_mez:
+        vyhodnoceni_text = "NEVYHOVUJE (interval měření včetně nejistoty leží mimo tolerance)."
+    else:
+        vyhodnoceni_text = (
+            "NELZE JEDNOZNAČNĚ POSOUDIT (interval měření včetně nejistoty překrývá hraniční hodnoty)."
+        )
+
+    # Výchozí texty, pokud uživatel nic nezadal
+    operator_fmt = operator_mereni if operator_mereni else "—"
+    meridlo_fmt = pouzite_meridlo if pouzite_meridlo else "Posuvné měřítko"
+
+    info_text_lines = [
+        "PROTOKOL O MĚŘENÍ – Výsledné údaje",
+        f"Číslo protokolu: {cislo_protokolu_fmt}",
+        f"Datum a čas měření: {datum_mereni}",
+        f"Operátor měření: {operator_fmt}",
+        f"Použité měřidlo: {meridlo_fmt}",
+        "",
+        "Informace o předmětu měření:",
+        f"  Název dílu: {nazev if nazev else '—'}",
+        f"  Materiálové číslo: {matcislo if matcislo else '—'}",
+        f"  Nominální hodnota: {nominal:.4f} mm",
+        f"  Spodní tolerance: {spod_mez:.4f} mm",
+        f"  Horní tolerance: {horni_mez:.4f} mm",
+        "",
+        "Shrnutí výsledku:",
+        f"  Průměrná hodnota: {prumer:.4f} mm",
+        f"  Rozšířená nejistota U (k = 2): {roz_nej_u:.4f} mm",
+        "  Uvedená nejistota odpovídá přibližně 95% hladině spolehlivosti.",
+        f"  Vyhodnocení shody s tolerancí: {vyhodnoceni_text}",
+        "",
+        "Naměřené hodnoty [mm]:",
+        f"  {hodnoty_text}",
+    ]
+
+    if poznamka_proto:
+        info_text_lines.extend([
+            "",
+            f"Poznámka: {poznamka_proto}",
+        ])
+
+    info_text = "\n".join(info_text_lines)
+    text_ax.set_xlim(0, 1)
+    text_ax.set_ylim(0, 1)
+    text_ax.text(0.0, 1.0, info_text, fontsize=9, va="top", ha="left", linespacing=1.3)
+
+    return fig, ax, text_ax
 
 
 
@@ -251,7 +428,23 @@ def zobraz_graf():
 
     # Připravíme data pro graf
     x_indexy = list(range(1, len(hodnoty) + 1))
-    biasy = [h - prumer for h in hodnoty]
+
+    # Vytvoříme a naplníme objekt Figure s protokolem (A4 stránka)
+    fig, ax, text_ax = vytvor_protokol_figure(
+        hodnoty=hodnoty,
+        prumer=prumer,
+        roz_nej_u=roz_nej_u,
+        nominal=nominal,
+        spod_mez=spod_mez,
+        horni_mez=horni_mez,
+        cislo_protokolu=cislo_protokolu,
+        operator_mereni=operator_mereni,
+        pouzite_meridlo=pouzite_meridlo,
+        nazev=nazev,
+        matcislo=matcislo,
+        poznamka_proto=poznamka_proto,
+        x_indexy=x_indexy,
+    )
 
     # Vytvoříme nové okno pro graf, nad hlavním oknem
     okno_graf = ctk.CTkToplevel(window)
@@ -261,44 +454,6 @@ def zobraz_graf():
     okno_graf.lift()
     okno_graf.attributes("-topmost", True)
     okno_graf.after(100, lambda: okno_graf.attributes("-topmost", False))
-
-    # Obrázek pro zobrazení v okně i pro export do PDF
-    fig = Figure(figsize=(7, 5), dpi=100)
-    ax = fig.add_subplot(111)
-
-    # Hlavní nadpis ve stylu protokolu
-    fig.suptitle("Protokol o měření – posuvné měřítko", fontsize=12, fontweight="bold", y=0.98)
-
-    # Plné čáry: nominální hodnota a tolerance
-    ax.axhline(nominal, color="tab:green", linestyle="-", label="Nominální hodnota")
-    ax.axhline(spod_mez, color="tab:gray", linestyle="-", label="Spodní tolerance")
-    ax.axhline(horni_mez, color="tab:gray", linestyle="-", label="Horní tolerance")
-
-    # Pruhovaná čára = průměr
-    ax.axhline(prumer, color="tab:blue", linestyle="--", label="Průměr")
-
-    # Body měření s errorbary ± rozšířená nejistota
-    ax.errorbar(x_indexy, hodnoty, yerr=[roz_nej_u] * len(hodnoty), fmt="o", color="tab:red",
-                ecolor="gray", elinewidth=1, capsize=4, label="Hodnoty ± U")
-
-    # Nastavení osy Y tak, aby byl prostor i pro hodnoty mimo tolerance
-    vsechny_y = hodnoty + [nominal, spod_mez, horni_mez]
-    y_min = min(vsechny_y)
-    y_max = max(vsechny_y)
-    rozsah = y_max - y_min if y_max != y_min else max(1.0, abs(y_max))
-    mezera = 0.2 * rozsah
-    ax.set_ylim(y_min - mezera, y_max + mezera)
-
-    ax.set_xlabel("Pořadí měření")
-    ax.set_ylabel("Hodnota [mm]")
-    ax.set_title("Naměřené hodnoty, průměr, nominál a tolerance")
-    ax.grid(True, linestyle=":", alpha=0.5)
-    ax.legend(loc="best")
-
-    # Text s informacemi a hodnotami pod grafem (pro export do PDF)
-    fig.subplots_adjust(bottom=0.3)
-    hodnoty_text = ", ".join(f"{h:.4f}" for h in hodnoty)
-    datum_mereni = datetime.now().strftime("%d.%m.%Y %H:%M")
 
     # Vyhodnocení shody s tolerancemi včetně nejistoty
     dolni_hranice_s_U = prumer - roz_nej_u
@@ -313,43 +468,7 @@ def zobraz_graf():
             "NELZE JEDNOZNAČNĚ POSOUDIT (interval měření včetně nejistoty překrývá hraniční hodnoty)."
         )
 
-    # Výchozí texty, pokud uživatel nic nezadal
-    cislo_protokolu_fmt = cislo_protokolu if cislo_protokolu else "—"
-    operator_fmt = operator_mereni if operator_mereni else "—"
-    meridlo_fmt = pouzite_meridlo if pouzite_meridlo else "Posuvné měřítko"
-
-    info_text_lines = [
-        "PROTOKOL O MĚŘENÍ – Výsledné údaje",
-        f"Číslo protokolu: {cislo_protokolu_fmt}",
-        f"Datum a čas měření: {datum_mereni}",
-        f"Operátor měření: {operator_fmt}",
-        f"Použité měřidlo: {meridlo_fmt}",
-        "",
-        "Informace o předmětu měření:",
-        f"  Název: {nazev if nazev else '—'}",
-        f"  Materiálové číslo: {matcislo if matcislo else '—'}",
-        f"  Nominální hodnota: {nominal:.4f} mm",
-        f"  Spodní tolerance: {spod_mez:.4f} mm",
-        f"  Horní tolerance: {horni_mez:.4f} mm",
-        "",
-        "Shrnutí výsledku:",
-        f"  Průměrná hodnota: {prumer:.4f} mm",
-        f"  Rozšířená nejistota U (k = 2): {roz_nej_u:.4f} mm",
-        "  Uvedená nejistota odpovídá přibližně 95% hladině spolehlivosti.",
-        f"  Vyhodnocení shody s tolerancí: {vyhodnoceni_text}",
-        "",
-        "Naměřené hodnoty [mm]:",
-        f"  {hodnoty_text}",
-    ]
-
-    if poznamka_proto:
-        info_text_lines.extend([
-            "",
-            f"Poznámka: {poznamka_proto}",
-        ])
-
-    info_text = "\n".join(info_text_lines)
-    fig.text(0.01, 0.02, info_text, fontsize=8, va="bottom", ha="left")
+    # Text a další informace už jsou ve fig/text_ax vytvořené funkcí vytvor_protokol_figure
 
     canvas = FigureCanvasTkAgg(fig, master=okno_graf)
     canvas.draw()
@@ -368,6 +487,118 @@ def zobraz_graf():
 
     ulozit_button = ctk.CTkButton(okno_graf, text="Uložit protokol do PDF", command=uloz_pdf, width=160)
     ulozit_button.pack(pady=5)
+
+
+def exportovat_protokol_pdf():
+    """Přímý export protokolu do PDF z hlavního okna bez zobrazování grafu.
+
+    Používá stejná data a rozložení jako zobraz_graf().
+    """
+
+    # Stejné kontroly jako ve zobraz_graf
+    seznam_text = list_box.get(0, tk.END)
+    if len(seznam_text) < 2:
+        vystraha.configure(text="Pro protokol zadej minimálně dvě hodnoty.")
+        return
+
+    try:
+        hodnoty = [float(x) for x in seznam_text]
+    except ValueError:
+        vystraha.configure(text="Některá zadaná hodnota není číslo.")
+        return
+
+    soucet = sum(hodnoty)
+    prumer = soucet / len(hodnoty)
+
+    soucet_2 = 0
+    for x in hodnoty:
+        soucet_2 = pow(x - prumer, 2) + soucet_2
+
+    sumax = soucet_2 / (len(hodnoty) * (len(hodnoty) - 1))
+    nej_a = math.sqrt(sumax)
+
+    # Rozlišení
+    carka = input_rozliseni_entry.get().strip()
+    if not carka:
+        vystraha.configure(text="Pro protokol zadej také rozlišení měřidla.")
+        return
+    if "," in carka:
+        carka = carka.replace(",", ".")
+    try:
+        rozliseni = float(carka)
+    except ValueError:
+        vystraha.configure(text="Rozlišení měřidla musí být číslo.")
+        return
+
+    chyba_odectu = rozliseni / 2
+
+    # Abbeho chyba a vliv teploty podle zaškrtávacích tlačítek
+    abbe = 0.033
+    teplota = round(11.5 * 0.000001 * prumer / pow(3, 1 / 3), 5)
+
+    if not checkbutton_abbe_value.get():
+        abbe = 0
+    if not checkbutton_teplota_value.get():
+        teplota = 0
+
+    nej_b = math.sqrt(pow(abbe, 2) + pow(teplota, 2) + pow(chyba_odectu, 2))
+    komb_nej = math.sqrt(pow(nej_a, 2) + pow(nej_b, 2))
+    roz_nej_u = komb_nej * 2
+
+    # Nominál a tolerance
+    nom_text = info_nom_entry.get().strip()
+    tol_spod_text = info_tol_spod_entry.get().strip()
+    tol_horn_text = info_tol_horn_entry.get().strip()
+
+    try:
+        if "," in nom_text:
+            nom_text = nom_text.replace(",", ".")
+        if "," in tol_spod_text:
+            tol_spod_text = tol_spod_text.replace(",", ".")
+        if "," in tol_horn_text:
+            tol_horn_text = tol_horn_text.replace(",", ".")
+
+        nominal = float(nom_text) if nom_text else prumer
+        spod_mez = float(tol_spod_text) if tol_spod_text else nominal
+        horni_mez = float(tol_horn_text) if tol_horn_text else nominal
+    except ValueError:
+        vystraha.configure(text="Nominál a tolerance musí být čísla.")
+        return
+
+    # Další informace pro protokol
+    nazev = info_nazev_entry.get().strip()
+    matcislo = info_mat_entry.get().strip()
+    cislo_protokolu = info_protokol_entry.get().strip()
+    operator_mereni = info_operator_entry.get().strip()
+    pouzite_meridlo = info_meridlo_entry.get().strip()
+    poznamka_proto = info_poznamka_entry.get().strip()
+
+    x_indexy = list(range(1, len(hodnoty) + 1))
+
+    fig, ax, text_ax = vytvor_protokol_figure(
+        hodnoty=hodnoty,
+        prumer=prumer,
+        roz_nej_u=roz_nej_u,
+        nominal=nominal,
+        spod_mez=spod_mez,
+        horni_mez=horni_mez,
+        cislo_protokolu=cislo_protokolu,
+        operator_mereni=operator_mereni,
+        pouzite_meridlo=pouzite_meridlo,
+        nazev=nazev,
+        matcislo=matcislo,
+        poznamka_proto=poznamka_proto,
+        x_indexy=x_indexy,
+    )
+
+    soubor = fd.asksaveasfilename(
+        parent=window,
+        defaultextension=".pdf",
+        filetypes=(("PDF soubory", "*.pdf"), ("Všechny soubory", "*.*")),
+        title="Uložit protokol do PDF",
+    )
+    if soubor:
+        fig.savefig(soubor, format="pdf")
 
 # Hlavní menu
 hlavniMenu = tk.Menu(window)
@@ -569,7 +800,7 @@ vystraha = ctk.CTkLabel(others_frame, text="", text_color="#8B0013", font=second
 vystraha.grid(row=3, column=0, pady=5)
 
 # Informace o měřeném předmětu (levý sloupec)
-info_nazev_label = ctk.CTkLabel(others_frame, text="Název předmětu", font=second_font)
+info_nazev_label = ctk.CTkLabel(others_frame, text="Název dílu", font=second_font)
 info_nazev_label.grid(row=4, column=0, padx=5, pady=(10, 0), sticky="w")
 info_nazev_entry = ctk.CTkEntry(others_frame, width=160)
 info_nazev_entry.grid(row=5, column=0, padx=5, pady=(0, 5), sticky="ew")
@@ -620,7 +851,10 @@ button = ctk.CTkButton(count_frame, text="Vypočítej", command=vypocitej, width
 button.grid(row=4, column=0, pady=(20, 5))
 
 graf_button = ctk.CTkButton(count_frame, text="Graf", command=zobraz_graf, width=120)
-graf_button.grid(row=5, column=0, pady=(0, 10))
+graf_button.grid(row=5, column=0, pady=(0, 5))
+
+export_pdf_button = ctk.CTkButton(count_frame, text="Protokol PDF", command=exportovat_protokol_pdf, width=120)
+export_pdf_button.grid(row=6, column=0, pady=(0, 10))
 
 # Zaškrtávací tlačítko
 
@@ -637,7 +871,7 @@ checkbutton_teplota.grid(row=5, column=2, padx=5, pady=5)
 
 # Štítek s právy
 prava = ctk.CTkLabel(count_frame, text="Copyright © 2024-2026 Sumixon", font=("Helvetica", 9))
-prava.grid(row=6, column=0, padx=25)
+prava.grid(row=7, column=0, padx=25)
 
 # Zmáčknutí entru pro vložení hodnoty jen v poli vstupu
 window.mainloop()
