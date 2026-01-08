@@ -3,6 +3,7 @@ import tkinter as tk
 import customtkinter as ctk
 from matplotlib.figure import Figure
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
+from tkinter import filedialog as fd
 
 
 # Definování stylů
@@ -25,8 +26,8 @@ def change_theme(mode: str):
 
 #  Okno
 window = ctk.CTk()
-width = 900
-height = 550
+width = 950
+height = 650
 window.geometry(f"{width}x{height}")
 window.minsize(width, height)
 window.resizable(True, True)
@@ -218,34 +219,104 @@ def zobraz_graf():
     komb_nej = math.sqrt(pow(nej_a, 2) + pow(nej_b, 2))
     roz_nej_u = komb_nej * 2
 
+    # Nominální hodnota a tolerance pro zobrazení v grafu
+    nazev = info_nazev_entry.get().strip()
+    matcislo = info_mat_entry.get().strip()
+
+    nom_text = info_nom_entry.get().strip()
+    tol_spod_text = info_tol_spod_entry.get().strip()
+    tol_horn_text = info_tol_horn_entry.get().strip()
+
+    try:
+        if "," in nom_text:
+            nom_text = nom_text.replace(",", ".")
+        if "," in tol_spod_text:
+            tol_spod_text = tol_spod_text.replace(",", ".")
+        if "," in tol_horn_text:
+            tol_horn_text = tol_horn_text.replace(",", ".")
+
+        nominal = float(nom_text) if nom_text else prumer
+        spod_mez = float(tol_spod_text) if tol_spod_text else nominal
+        horni_mez = float(tol_horn_text) if tol_horn_text else nominal
+    except ValueError:
+        vystraha.configure(text="Nominál a tolerance musí být čísla.")
+        return
+
     # Připravíme data pro graf
     x_indexy = list(range(1, len(hodnoty) + 1))
     biasy = [h - prumer for h in hodnoty]
 
-    # Vytvoříme nové okno pro graf
+    # Vytvoříme nové okno pro graf, nad hlavním oknem
     okno_graf = ctk.CTkToplevel(window)
     okno_graf.title("Graf naměřených hodnot a nejistoty")
     okno_graf.geometry("800x500")
+    okno_graf.transient(window)
+    okno_graf.lift()
+    okno_graf.attributes("-topmost", True)
+    okno_graf.after(100, lambda: okno_graf.attributes("-topmost", False))
 
-    fig = Figure(figsize=(7, 4), dpi=100)
+    fig = Figure(figsize=(7, 5), dpi=100)
     ax = fig.add_subplot(111)
 
-    # Hlavní vodorovná čára = průměr
+    # Plné čáry: nominální hodnota a tolerance
+    ax.axhline(nominal, color="tab:green", linestyle="-", label="Nominální hodnota")
+    ax.axhline(spod_mez, color="tab:gray", linestyle="-", label="Spodní tolerance")
+    ax.axhline(horni_mez, color="tab:gray", linestyle="-", label="Horní tolerance")
+
+    # Pruhovaná čára = průměr
     ax.axhline(prumer, color="tab:blue", linestyle="--", label="Průměr")
 
     # Body měření s errorbary ± rozšířená nejistota
     ax.errorbar(x_indexy, hodnoty, yerr=[roz_nej_u] * len(hodnoty), fmt="o", color="tab:red",
                 ecolor="gray", elinewidth=1, capsize=4, label="Hodnoty ± U")
 
+    # Nastavení osy Y tak, aby byl prostor i pro hodnoty mimo tolerance
+    vsechny_y = hodnoty + [nominal, spod_mez, horni_mez]
+    y_min = min(vsechny_y)
+    y_max = max(vsechny_y)
+    rozsah = y_max - y_min if y_max != y_min else max(1.0, abs(y_max))
+    mezera = 0.2 * rozsah
+    ax.set_ylim(y_min - mezera, y_max + mezera)
+
     ax.set_xlabel("Pořadí měření")
     ax.set_ylabel("Hodnota [mm]")
-    ax.set_title("Naměřené hodnoty, průměr a rozšířená nejistota")
+    ax.set_title("Naměřené hodnoty, průměr, nominál a tolerance")
     ax.grid(True, linestyle=":", alpha=0.5)
-    ax.legend()
+    ax.legend(loc="best")
+
+    # Text s informacemi a hodnotami pod grafem (pro export do PDF)
+    fig.subplots_adjust(bottom=0.3)
+    hodnoty_text = ", ".join(f"{h:.4f}" for h in hodnoty)
+    info_text_lines = [
+        f"Název: {nazev}" if nazev else "",
+        f"Materiálové číslo: {matcislo}" if matcislo else "",
+        f"Nominální hodnota: {nominal:.4f} mm",
+        f"Spodní tolerance: {spod_mez:.4f} mm",
+        f"Horní tolerance: {horni_mez:.4f} mm",
+        f"Průměr: {prumer:.4f} mm",
+        f"Rozšířená nejistota U: {roz_nej_u:.4f} mm",
+        f"Naměřené hodnoty: {hodnoty_text}",
+    ]
+    info_text = "\n".join([radek for radek in info_text_lines if radek])
+    fig.text(0.01, 0.02, info_text, fontsize=8, va="bottom", ha="left")
 
     canvas = FigureCanvasTkAgg(fig, master=okno_graf)
     canvas.draw()
     canvas.get_tk_widget().pack(fill="both", expand=True)
+
+    # Tlačítko pro export grafu do PDF
+    def uloz_pdf():
+        soubor = fd.asksaveasfilename(
+            parent=okno_graf,
+            defaultextension=".pdf",
+            filetypes=(("PDF soubory", "*.pdf"), ("Všechny soubory", "*.*")),
+            title="Uložit graf jako PDF",
+        )
+        if soubor:
+            fig.savefig(soubor, format="pdf")
+
+    ulozit_button = ctk.CTkButton(okno_graf, text="Uložit do PDF", command=uloz_pdf, width=120)
+    ulozit_button.pack(pady=5)
 
 # Hlavní menu
 hlavniMenu = tk.Menu(window)
@@ -444,6 +515,32 @@ pocet_zadanych_hodnot.grid(row=2, column=0)
 vystraha = ctk.CTkLabel(others_frame, text="", text_color="#8B0013", font=second_font, wraplength=150)
 vystraha.grid(row=3, column=0, pady=5)
 
+# Informace o měřeném předmětu
+info_nazev_label = ctk.CTkLabel(others_frame, text="Název předmětu", font=second_font)
+info_nazev_label.grid(row=4, column=0, padx=5, pady=(10, 0), sticky="w")
+info_nazev_entry = ctk.CTkEntry(others_frame, width=160)
+info_nazev_entry.grid(row=5, column=0, padx=5, pady=(0, 5), sticky="ew")
+
+info_mat_label = ctk.CTkLabel(others_frame, text="Materiálové číslo", font=second_font)
+info_mat_label.grid(row=6, column=0, padx=5, pady=(5, 0), sticky="w")
+info_mat_entry = ctk.CTkEntry(others_frame, width=160)
+info_mat_entry.grid(row=7, column=0, padx=5, pady=(0, 5), sticky="ew")
+
+info_nom_label = ctk.CTkLabel(others_frame, text="Nominální hodnota [mm]", font=second_font)
+info_nom_label.grid(row=8, column=0, padx=5, pady=(5, 0), sticky="w")
+info_nom_entry = ctk.CTkEntry(others_frame, width=160)
+info_nom_entry.grid(row=9, column=0, padx=5, pady=(0, 5), sticky="ew")
+
+info_tol_spod_label = ctk.CTkLabel(others_frame, text="Spodní tolerance [mm]", font=second_font)
+info_tol_spod_label.grid(row=10, column=0, padx=5, pady=(5, 0), sticky="w")
+info_tol_spod_entry = ctk.CTkEntry(others_frame, width=160)
+info_tol_spod_entry.grid(row=11, column=0, padx=5, pady=(0, 5), sticky="ew")
+
+info_tol_horn_label = ctk.CTkLabel(others_frame, text="Horní tolerance [mm]", font=second_font)
+info_tol_horn_label.grid(row=12, column=0, padx=5, pady=(5, 0), sticky="w")
+info_tol_horn_entry = ctk.CTkEntry(others_frame, width=160)
+info_tol_horn_entry.grid(row=13, column=0, padx=5, pady=(0, 5), sticky="ew")
+
 # Tlačítka ve spodním panelu
 button = ctk.CTkButton(count_frame, text="Vypočítej", command=vypocitej, width=120)
 button.grid(row=4, column=0, pady=(20, 5))
@@ -465,7 +562,7 @@ checkbutton_teplota = ctk.CTkCheckBox(text_frame, text="Zahrnout\ndo výpočtu",
 checkbutton_teplota.grid(row=5, column=2, padx=5, pady=5)
 
 # Štítek s právy
-prava = ctk.CTkLabel(count_frame, text="Copyright © 2024 Sumixon", font=("Helvetica", 9))
+prava = ctk.CTkLabel(count_frame, text="Copyright © 2024-2026 Sumixon", font=("Helvetica", 9))
 prava.grid(row=6, column=0, padx=25)
 
 # Zmáčknutí entru pro vložení hodnoty jen v poli vstupu
