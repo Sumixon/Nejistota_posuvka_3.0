@@ -33,11 +33,11 @@ Po spuštění se otevře okno aplikace „Výpočet nejistoty měření posuvn�
 - Do pole **Zadej rozlišení měřidla** zadejte rozlišení použitého posuvného měřítka.
 - Volitelně můžete přepínat zahrnutí **Abbeho chyby** a **vlivu teploty** do výpočtu pomocí zaškrtávacích polí.
 - Stiskněte tlačítko **Vypočítej** pro výpočet:
-	- nejistoty typu A,
-	- složek nejistoty typu B (Abbeho chyba, vliv teploty, chyba odečtu),
-	- kombinované nejistoty,
-	- rozšířené nejistoty,
-	- a výsledku měření ve tvaru *x ± U* [mm].
+  - nejistoty typu A,
+  - složek nejistoty typu B (Abbeho chyba, vliv teploty, chyba odečtu),
+  - kombinované nejistoty,
+  - rozšířené nejistoty,
+  - a výsledku měření ve tvaru _x ± U_ [mm].
 
 ### Struktura projektu
 
