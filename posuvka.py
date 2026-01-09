@@ -608,7 +608,13 @@ def zobraz_graf():
     # Vytvoříme nové okno pro graf, nad hlavním oknem
     okno_graf = ctk.CTkToplevel(window)
     okno_graf.title("Graf naměřených hodnot a nejistoty")
-    okno_graf.geometry("800x500")
+
+    # Nastavíme velikost okna podle velikosti A4 figure (v pixelech)
+    fig_width_in, fig_height_in = fig.get_size_inches()
+    fig_dpi = fig.dpi
+    win_width = int(fig_width_in * fig_dpi)
+    win_height = int(fig_height_in * fig_dpi)
+    okno_graf.geometry(f"{win_width}x{win_height}")
     okno_graf.transient(window)
     okno_graf.lift()
     okno_graf.attributes("-topmost", True)
