@@ -20,6 +20,10 @@ DEFAULT_PROTOCOL_LOGO_PATH = "img/sumixon130x50_black.png"
 # Aktuálně používané logo (může být změněno uživatelem během běhu aplikace)
 PROTOCOL_LOGO_PATH = DEFAULT_PROTOCOL_LOGO_PATH
 
+# Maximální rozměry loga v GUI (pixely)
+GUI_LOGO_MAX_WIDTH = 180
+GUI_LOGO_MAX_HEIGHT = 80
+
 ctk.set_appearance_mode("system")
 ctk.set_default_color_theme("blue")
 
@@ -36,15 +40,41 @@ def change_theme(mode: str):
 #  Okno
 window = ctk.CTk()
 width = 1150
-height = 650
+height = 700
 window.geometry(f"{width}x{height}")
 window.minsize(width, height)
 window.resizable(True, True)
 window.title("Výpočet nejistoty měření posuvné měřítko")
 
 
-# Logo v GUI
-logo = tk.PhotoImage(file=PROTOCOL_LOGO_PATH)
+def _nacist_logo_do_gui(cesta: str) -> tk.PhotoImage:
+    """Načte obrázek loga a případně ho zmenší na rozumnou velikost pro GUI.
+
+    Pro protokol se používá originální soubor, zde řešíme pouze vzhled v aplikaci.
+    """
+
+    try:
+        img = tk.PhotoImage(file=cesta)
+    except Exception:
+        # Když se logo nepodaří načíst, vrátíme prázdný obrázek 1x1
+        return tk.PhotoImage(width=1, height=1)
+
+    w = img.width()
+    h = img.height()
+
+    if w <= GUI_LOGO_MAX_WIDTH and h <= GUI_LOGO_MAX_HEIGHT:
+        return img
+
+    scale = max(w / GUI_LOGO_MAX_WIDTH, h / GUI_LOGO_MAX_HEIGHT)
+    faktor = max(1, int(math.ceil(scale)))
+
+    # subsample zmenšuje obrázek celočíselným faktorem
+    zmensene = img.subsample(faktor, faktor)
+    return zmensene
+
+
+# Logo v GUI (zmenšené na max. velikost)
+logo = _nacist_logo_do_gui(PROTOCOL_LOGO_PATH)
 
 
 def zmenit_logo():
@@ -69,7 +99,7 @@ def zmenit_logo():
         return
 
     try:
-        nove_logo = tk.PhotoImage(file=soubor)
+        nove_logo = _nacist_logo_do_gui(soubor)
     except Exception as e:
         mb.showerror("Chyba načtení loga", f"Obrázek se nepodařilo načíst.\n\n{e}")
         return
@@ -94,7 +124,7 @@ def obnovit_vychozi_logo():
     PROTOCOL_LOGO_PATH = DEFAULT_PROTOCOL_LOGO_PATH
 
     try:
-        nove_logo = tk.PhotoImage(file=PROTOCOL_LOGO_PATH)
+        nove_logo = _nacist_logo_do_gui(PROTOCOL_LOGO_PATH)
     except Exception as e:
         mb.showerror("Chyba načtení výchozího loga", f"Výchozí logo se nepodařilo načíst.\n\n{e}")
         return
@@ -147,12 +177,12 @@ def vytvor_protokol_figure(
     if os.path.exists(PROTOCOL_LOGO_PATH):
         try:
             logo_img = mpimg.imread(PROTOCOL_LOGO_PATH)
-            # Zachování poměru stran loga, menší výška aby se neroztahovalo
-            logo_height = 0.20
+            # Zachování poměru stran loga, mírně větší výška pro lepší čitelnost
+            logo_height = 0.40
             logo_width = logo_height * (logo_img.shape[1] / logo_img.shape[0])
             logo_x_min = 0.5 - logo_width / 2
             logo_x_max = 0.5 + logo_width / 2
-            logo_y_min = 0.65
+            logo_y_min = 0.62
             logo_y_max = logo_y_min + logo_height
             header_ax.imshow(
                 logo_img,
@@ -730,8 +760,9 @@ right_frame.grid(row=0, column=2, sticky="nsew", padx=5, pady=5)
 left_frame.grid_rowconfigure(1, weight=1)
 center_frame.grid_rowconfigure(0, weight=1)
 center_frame.grid_columnconfigure(0, weight=1)
-right_frame.grid_rowconfigure(0, weight=1)
-right_frame.grid_rowconfigure(1, weight=1)
+right_frame.grid_rowconfigure(0, weight=0)  # řádek pro logo
+right_frame.grid_rowconfigure(1, weight=1)  # formulář
+right_frame.grid_rowconfigure(2, weight=1)  # spodní panel
 
 # Definování framů uvnitř kontejnerů
 input_frame = ctk.CTkFrame(left_frame, corner_radius=8)
@@ -752,13 +783,16 @@ text_frame.grid(row=0, column=0, sticky="nsew", padx=5, pady=5)
 text_frame_label = ctk.CTkLabel(text_frame, text="Výpočet nejistoty", font=main_font)
 text_frame_label.grid(row=0, column=0, columnspan=3, padx=5, pady=(10, 0), sticky="w")
 
+logo_frame = ctk.CTkFrame(right_frame, corner_radius=8)
+logo_frame.grid(row=0, column=0, sticky="new", padx=5, pady=(5, 0))
+
 others_frame = ctk.CTkFrame(right_frame, corner_radius=8)
-others_frame.grid(row=0, column=0, sticky="nsew", padx=5, pady=(5, 5))
+others_frame.grid(row=1, column=0, sticky="nsew", padx=5, pady=(5, 5))
 others_frame.grid_columnconfigure(0, weight=1)
 others_frame.grid_columnconfigure(1, weight=1)
 
 count_frame = ctk.CTkFrame(right_frame, corner_radius=8)
-count_frame.grid(row=1, column=0, sticky="nsew", padx=5, pady=(0, 5))
+count_frame.grid(row=2, column=0, sticky="nsew", padx=5, pady=(0, 5))
 
 # Definování prvků programu
 
@@ -861,20 +895,20 @@ vysledek_mereni.grid(row=7, column=2, padx=5, pady=5)
 vysledek_mereni_label_1 = ctk.CTkLabel(text_frame, width=160, height=40, font=second_font, text="",
                                        text_color="#8B0013")
 vysledek_mereni_label_1.grid(row=8, column=2, padx=15)
-# Logo
-logo_label = ctk.CTkLabel(others_frame, width=130, height=50, image=logo, text="")
-logo_label.grid(row=0, column=0, padx=20, pady=0)
+# Logo (v samostatném horním frame, aby neroztahovalo sloupce formuláře)
+logo_label = ctk.CTkLabel(logo_frame, width=GUI_LOGO_MAX_WIDTH, height=GUI_LOGO_MAX_HEIGHT, image=logo, text="")
+logo_label.grid(row=0, column=0, padx=20, pady=5, sticky="n")
 
 # Počet zadaných hodnot
 pocet_zadanych = ctk.CTkLabel(others_frame, text="Počet zadaných hodnot", font=second_font,
                               text_color="#8B0013")
-pocet_zadanych.grid(row=1, column=0, pady=10)
+pocet_zadanych.grid(row=0, column=0, pady=10)
 pocet_zadanych_hodnot = ctk.CTkLabel(others_frame, text="", text_color="#8B0013", font=("Helvetica", 20))
-pocet_zadanych_hodnot.grid(row=2, column=0)
+pocet_zadanych_hodnot.grid(row=1, column=0)
 
 # Štítek výstrahy
 vystraha = ctk.CTkLabel(others_frame, text="", text_color="#8B0013", font=second_font, wraplength=150)
-vystraha.grid(row=3, column=0, pady=5)
+vystraha.grid(row=2, column=0, pady=5)
 
 # Informace o měřeném předmětu (levý sloupec)
 info_nazev_label = ctk.CTkLabel(others_frame, text="Název dílu", font=second_font)
