@@ -6,6 +6,7 @@ import customtkinter as ctk
 from matplotlib.figure import Figure
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
 from tkinter import filedialog as fd
+from tkinter import messagebox as mb
 import matplotlib.image as mpimg
 
 
@@ -14,8 +15,10 @@ main_color = "grey"
 main_font = ("Helvetica", 16)
 second_font = ("Helvetica", 14)
 
-# Výchozí logo pro aplikaci i PDF protokol (lze změnit na jiný soubor)
-PROTOCOL_LOGO_PATH = "img/sumixon130x50_black.png"
+# Výchozí logo pro aplikaci i PDF protokol
+DEFAULT_PROTOCOL_LOGO_PATH = "img/sumixon130x50_black.png"
+# Aktuálně používané logo (může být změněno uživatelem během běhu aplikace)
+PROTOCOL_LOGO_PATH = DEFAULT_PROTOCOL_LOGO_PATH
 
 ctk.set_appearance_mode("system")
 ctk.set_default_color_theme("blue")
@@ -42,6 +45,63 @@ window.title("Výpočet nejistoty měření posuvné měřítko")
 
 # Logo v GUI
 logo = tk.PhotoImage(file=PROTOCOL_LOGO_PATH)
+
+
+def zmenit_logo():
+    """Otevře dialog pro výběr souboru s logem a aktualizuje logo v aplikaci i v protokolu.
+
+    Očekává se obrázek (např. PNG). Pokud se obrázek nepodaří načíst, zobrazí chybové okno.
+    """
+
+    global PROTOCOL_LOGO_PATH, logo, logo_label
+
+    soubor = fd.askopenfilename(
+        parent=window,
+        title="Vyberte obrázek loga",
+        filetypes=(
+            ("Obrázky PNG", "*.png"),
+            ("Obrázky GIF", "*.gif"),
+            ("Všechny soubory", "*.*"),
+        ),
+    )
+
+    if not soubor:
+        return
+
+    try:
+        nove_logo = tk.PhotoImage(file=soubor)
+    except Exception as e:
+        mb.showerror("Chyba načtení loga", f"Obrázek se nepodařilo načíst.\n\n{e}")
+        return
+
+    # Aktualizace cesty pro protokol / grafy
+    PROTOCOL_LOGO_PATH = soubor
+
+    # Aktualizace loga v GUI
+    logo = nove_logo
+    if "logo_label" in globals():
+        logo_label.configure(image=logo)
+
+
+def obnovit_vychozi_logo():
+    """Vrátí logo zpět na výchozí obrázek.
+
+    Použije DEFAULT_PROTOCOL_LOGO_PATH a aktualizuje jak GUI, tak protokol.
+    """
+
+    global PROTOCOL_LOGO_PATH, logo, logo_label
+
+    PROTOCOL_LOGO_PATH = DEFAULT_PROTOCOL_LOGO_PATH
+
+    try:
+        nove_logo = tk.PhotoImage(file=PROTOCOL_LOGO_PATH)
+    except Exception as e:
+        mb.showerror("Chyba načtení výchozího loga", f"Výchozí logo se nepodařilo načíst.\n\n{e}")
+        return
+
+    logo = nove_logo
+    if "logo_label" in globals():
+        logo_label.configure(image=logo)
 
 
 def vytvor_protokol_figure(
@@ -158,7 +218,19 @@ def vytvor_protokol_figure(
     ax.legend(loc="best")
 
     # Text s informacemi a hodnotami NAD grafem (textové položky jako první)
-    hodnoty_text = ", ".join(f"{h:.4f}" for h in hodnoty)
+    # Naformátování hodnot: max. 4 desetinná místa bez zbytečných koncových nul
+    formatted_hodnoty = []
+    for h in hodnoty:
+        s = f"{h:.4f}".rstrip("0").rstrip(".")
+        formatted_hodnoty.append(s)
+
+    # Rozdělení hodnot do více řádků, aby se text vešel na A4
+    hodnoty_radky = []
+    hodnot_na_radek = 15  # počet hodnot na jeden řádek (dle potřeby lze změnit)
+    for i in range(0, len(formatted_hodnoty), hodnot_na_radek):
+        radek = ", ".join(formatted_hodnoty[i : i + hodnot_na_radek])
+        hodnoty_radky.append(radek)
+
     datum_mereni = datetime.now().strftime("%d.%m.%Y %H:%M")
 
     # Vyhodnocení shody s tolerancemi včetně nejistoty
@@ -171,7 +243,7 @@ def vytvor_protokol_figure(
         vyhodnoceni_text = "NEVYHOVUJE (interval měření včetně nejistoty leží mimo tolerance)."
     else:
         vyhodnoceni_text = (
-            "NELZE JEDNOZNAČNĚ POSOUDIT (interval měření včetně nejistoty překrývá hraniční hodnoty)."
+            "NELZE JEDNOZNAČNĚ POSOUDIT\n (interval měření včetně nejistoty překrývá hraniční hodnoty)."
         )
 
     # Výchozí texty, pokud uživatel nic nezadal
@@ -199,8 +271,10 @@ def vytvor_protokol_figure(
         f"  Vyhodnocení shody s tolerancí: {vyhodnoceni_text}",
         "",
         "Naměřené hodnoty [mm]:",
-        f"  {hodnoty_text}",
     ]
+
+    for radek in hodnoty_radky:
+        info_text_lines.append(f"  {radek}")
 
     if poznamka_proto:
         info_text_lines.extend([
@@ -607,6 +681,9 @@ hlavniMenu = tk.Menu(window)
 menuSoubor = tk.Menu(hlavniMenu, tearoff=0, bg=main_color)
 menuSoubor.add_command(label="Otevřít")
 menuSoubor.add_command(label="Uložit")
+menuSoubor.add_separator()
+menuSoubor.add_command(label="Změnit logo…", command=zmenit_logo)
+menuSoubor.add_command(label="Obnovit výchozí logo", command=obnovit_vychozi_logo)
 menuSoubor.add_separator()
 menuSoubor.add_command(label="Ukončit", command=window.quit)
 hlavniMenu.add_cascade(label="Soubor", menu=menuSoubor)
