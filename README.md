@@ -1,5 +1,7 @@
 ## Nejistota_posuvka_3.0
 
+[![Čeština](https://flagcdn.com/w20/cz.png)](README.md) [![English](https://flagcdn.com/w20/gb.png)](README_en.md) [![Deutsch](https://flagcdn.com/w20/de.png)](README_de.md)
+
 Aplikace pro výpočet nejistoty měření při měření posuvným měřítkem. Grafické rozhraní je vytvořené pomocí knihovny **customtkinter** (moderní vzhled pro Tkinter).
 
 Aplikace aktuálně podporuje tyto jazyky rozhraní i výstupního protokolu:

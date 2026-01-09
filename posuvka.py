@@ -8,6 +8,7 @@ from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
 from tkinter import filedialog as fd
 from tkinter import messagebox as mb
 import matplotlib.image as mpimg
+import urllib.request
 
 from translations import t, set_language
 
@@ -26,6 +27,14 @@ PROTOCOL_LOGO_PATH = DEFAULT_PROTOCOL_LOGO_PATH
 # Maximální rozměry loga v GUI (pixely)
 GUI_LOGO_MAX_WIDTH = 220
 GUI_LOGO_MAX_HEIGHT = 100
+
+# Veřejné URL obrázků vlajek a lokální cache adresář
+FLAG_URLS = {
+    "cs": "https://flagcdn.com/w40/cz.png",
+    "en": "https://flagcdn.com/w40/gb.png",
+    "de": "https://flagcdn.com/w40/de.png",
+}
+FLAG_CACHE_DIR = os.path.join("img", "flags")
 
 ctk.set_appearance_mode("system")
 ctk.set_default_color_theme("blue")
@@ -53,14 +62,16 @@ window.title(t("app_title"))
 def _nacist_logo_do_gui(cesta: str) -> tk.PhotoImage:
     """Načte obrázek loga a případně ho zmenší na rozumnou velikost pro GUI.
 
+    Vrací tk.PhotoImage, který lze přímo přiřadit do CTkLabel (CustomTkinter pouze
+    vypíše varování ohledně HiDPI škálování, funkčně je to v pořádku).
     Pro protokol se používá originální soubor, zde řešíme pouze vzhled v aplikaci.
     """
 
     try:
         img = tk.PhotoImage(file=cesta)
     except Exception:
-        # Když se logo nepodaří načíst, vrátíme prázdný obrázek 1x1
-        return tk.PhotoImage(width=1, height=1)
+        # Když se logo nepodaří načíst, vrátíme prázdný průhledný obrázek 1x1
+        img = tk.PhotoImage(width=1, height=1)
 
     w = img.width()
     h = img.height()
@@ -78,6 +89,36 @@ def _nacist_logo_do_gui(cesta: str) -> tk.PhotoImage:
 
 # Logo v GUI (zmenšené na max. velikost)
 logo = _nacist_logo_do_gui(PROTOCOL_LOGO_PATH)
+
+
+def _nacist_vlajku(lang):
+    """Načte obrázek vlajky z veřejného URL do lokální cache a vrátí tk.PhotoImage.
+
+    Pokud se vlajku nepodaří načíst, vrátí None a aplikace může použít textové emoji.
+    """
+
+    url = FLAG_URLS.get(lang)
+    if not url:
+        return None
+
+    try:
+        if not os.path.exists(FLAG_CACHE_DIR):
+            os.makedirs(FLAG_CACHE_DIR, exist_ok=True)
+    except Exception:
+        return None
+
+    lokalni_cesta = os.path.join(FLAG_CACHE_DIR, f"{lang}.png")
+
+    if not os.path.exists(lokalni_cesta):
+        try:
+            urllib.request.urlretrieve(url, lokalni_cesta)
+        except Exception:
+            return None
+
+    try:
+        return tk.PhotoImage(file=lokalni_cesta)
+    except Exception:
+        return None
 
 
 def zmenit_logo():
@@ -998,11 +1039,17 @@ checkbutton_teplota.grid(row=5, column=2, padx=5, pady=5)
 prava = ctk.CTkLabel(count_frame, text=t("copyright"), font=("Helvetica", 9))
 prava.grid(row=7, column=0, padx=25, pady=(5, 5), sticky="w")
 
+# Načtení obrázků vlajek (pokud se nepodaří, použije se textový fallback)
+flag_img_cs = _nacist_vlajku("cs")
+flag_img_en = _nacist_vlajku("en")
+flag_img_de = _nacist_vlajku("de")
+
 # Přepínače jazyka pomocí vlaječek ve spodním panelu
 button_lang_cs = ctk.CTkButton(
     count_frame,
-    text="🇨🇿",
-    width=36,
+    image=flag_img_cs if flag_img_cs is not None else None,
+    text="" if flag_img_cs is not None else "🇨🇿",
+    width=40,
     height=24,
     command=lambda: nastav_jazyk("cs"),
 )
@@ -1010,8 +1057,9 @@ button_lang_cs.grid(row=7, column=1, padx=2, pady=(5, 5))
 
 button_lang_en = ctk.CTkButton(
     count_frame,
-    text="🇬🇧",
-    width=36,
+    image=flag_img_en if flag_img_en is not None else None,
+    text="" if flag_img_en is not None else "🇬🇧",
+    width=40,
     height=24,
     command=lambda: nastav_jazyk("en"),
 )
@@ -1019,8 +1067,9 @@ button_lang_en.grid(row=7, column=2, padx=2, pady=(5, 5))
 
 button_lang_de = ctk.CTkButton(
     count_frame,
-    text="🇩🇪",
-    width=36,
+    image=flag_img_de if flag_img_de is not None else None,
+    text="" if flag_img_de is not None else "🇩🇪",
+    width=40,
     height=24,
     command=lambda: nastav_jazyk("de"),
 )
