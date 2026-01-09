@@ -34,13 +34,13 @@ In the project directory, run:
 python posuvka.py
 ```
 
-After start, a window titled "Výpočet nejistoty měření posuvné měřítko" (Measurement uncertainty of a vernier caliper) will appear.
+After start, a window titled "Measurement uncertainty of a vernier caliper" will appear.
 
 ### How to use
 
-- In the **Zadej hodnoty** (Enter values) field, enter measured values (decimal separator can be comma or dot) and confirm with the **Zadej** (Add) button or the Enter key.
-- Use **Odstranit** (Remove) and **Odstraň vše** (Remove all) buttons to delete single or all values from the list.
-- In the **Zadej rozlišení měřidla** (Resolution of the gauge) field, enter the resolution of the caliper used.
+- In the **Enter values** field, enter measured values (decimal separator can be comma or dot) and confirm with the **Add** button or the Enter key.
+- Use **Remove** and **Remove all** buttons to delete single or all values from the list.
+- In the **Resolution of the gauge** field, enter the resolution of the caliper used.
 - Optionally, you can include or exclude **Abbe error** and **temperature influence** in the calculation using the checkboxes.
 - Press **Vypočítej** (Calculate) to compute:
   - type A uncertainty,
@@ -51,11 +51,11 @@ After start, a window titled "Výpočet nejistoty měření posuvné měřítko"
 
 Additional features:
 
-- **Graph and report** – the **Graf** (Chart) button opens a new window with a chart of measured values and a complete text report laid out on an A4 page.
-- **Export to PDF** – the **Protokol PDF** button (or the button in the chart window) lets you save the report directly to a PDF file.
-- **Logo in the report** – in the **Soubor** (File) menu you can change the logo image used both in the application and in the PDF report, or revert to the default logo.
-- **Themes** – in the **Motiv** (Theme) menu you can switch between system, light and dark appearance.
-- **About dialog** – in the **Nápověda → O aplikaci** (Help → About) menu you can open a small dialog with basic information about the application.
+- **Graph and report** – the **Chart** button opens a new window with a chart of measured values and a complete text report laid out on an A4 page.
+- **Export to PDF** – the button for the PDF report (or the button in the chart window) lets you save the report directly to a PDF file.
+- **Logo in the report** – in the **File** menu you can change the logo image used both in the application and in the PDF report, or revert to the default logo.
+- **Themes** – in the **Theme** menu you can switch between system, light and dark appearance.
+- **About dialog** – in the **Help → About** menu you can open a small dialog with basic information about the application.
 - **Language selection** – in the bottom-right corner of the main window there are three flags (🇨🇿/🇬🇧/🇩🇪) for quickly switching the GUI and report language.
 
 ### Project structure
