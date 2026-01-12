@@ -1,1 +1,0 @@
-Automatický backup před přidáním grafu.
