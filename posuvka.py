@@ -420,7 +420,7 @@ def vypocitej():
     seznam_text = list_box.get(0, tk.END)
     if len(seznam_text) < 2:
         vystraha.configure(text=t("warn_min_values"))
-        rozliseni_meridla.configure(text_color="#8B0013")
+        rozliseni_meridla.configure(text_color="#FFFFFF")
         vysledek_mereni_label_1.configure(text="")
         return
 
@@ -448,7 +448,7 @@ def vypocitej():
     carka = input_rozliseni_entry.get().strip()
     if not carka:
         vystraha.configure(text=t("warn_resolution_missing"))
-        rozliseni_meridla.configure(text_color="#8B0013")
+        rozliseni_meridla.configure(text_color="#FFFFFF")
         return
 
     if "," in carka:
@@ -458,7 +458,7 @@ def vypocitej():
         rozliseni = float(carka)
     except ValueError:
         vystraha.configure(text=t("warn_resolution_not_number"))
-        rozliseni_meridla.configure(text_color="#8B0013")
+        rozliseni_meridla.configure(text_color="#FFFFFF")
         return
 
     chyba_odectu = rozliseni / 2
@@ -949,12 +949,12 @@ rozsirena_nejistota_label = ctk.CTkLabel(text_frame, text="", width=80, font=sec
 rozsirena_nejistota_label.grid(row=8, column=1, padx=5, pady=10, sticky="w")
 
 # Výsledek měření
-vysledek_mereni = ctk.CTkLabel(text_frame, text=t("calc_result_title"), font=main_font, text_color="#8B0013",
+vysledek_mereni = ctk.CTkLabel(text_frame, text=t("calc_result_title"), font=main_font, text_color="#4D973E",
                                justify="center")
 vysledek_mereni.grid(row=7, column=2, padx=5, pady=5)
 
 vysledek_mereni_label_1 = ctk.CTkLabel(text_frame, width=160, height=40, font=second_font, text="",
-                                       text_color="#8B0013")
+                                       text_color="#4D973E")
 vysledek_mereni_label_1.grid(row=8, column=2, padx=15)
 # Logo (v samostatném horním frame, aby neroztahovalo sloupce formuláře)
 logo_label = ctk.CTkLabel(logo_frame, width=GUI_LOGO_MAX_WIDTH, height=GUI_LOGO_MAX_HEIGHT, image=logo, text="")
@@ -962,9 +962,9 @@ logo_label.grid(row=0, column=0, padx=20, pady=5, sticky="n")
 
 # Počet zadaných hodnot
 pocet_zadanych = ctk.CTkLabel(others_frame, text=t("right_count_label"), font=second_font,
-                              text_color="#8B0013")
+                              text_color="#4D973E")
 pocet_zadanych.grid(row=0, column=0, pady=10)
-pocet_zadanych_hodnot = ctk.CTkLabel(others_frame, text="", text_color="#8B0013", font=("Helvetica", 20))
+pocet_zadanych_hodnot = ctk.CTkLabel(others_frame, text="", text_color="#4D973E", font=("Helvetica", 20))
 pocet_zadanych_hodnot.grid(row=1, column=0)
 
 # Štítek výstrahy
