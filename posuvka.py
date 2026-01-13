@@ -1,5 +1,6 @@
 import math
 import os
+import json
 from datetime import datetime
 import tkinter as tk
 import customtkinter as ctk
@@ -23,6 +24,11 @@ second_font = ("Helvetica", 14)
 DEFAULT_PROTOCOL_LOGO_PATH = "img/sumixon130x50_black.png"
 # Aktuálně používané logo (může být změněno uživatelem během běhu aplikace)
 PROTOCOL_LOGO_PATH = DEFAULT_PROTOCOL_LOGO_PATH
+
+# Konfigurační soubor pro uložení cesty k logu mezi spuštěními aplikace
+APP_DIR = os.path.dirname(os.path.abspath(__file__))
+CONFIG_FILE = os.path.join(APP_DIR, "config.json")
+CONFIG_KEY_LOGO_PATH = "protocol_logo_path"
 
 # Maximální rozměry loga v GUI (pixely)
 GUI_LOGO_MAX_WIDTH = 220
@@ -59,6 +65,56 @@ window.resizable(True, True)
 window.title(t("app_title"))
 
 
+def _load_persistent_logo_path() -> str | None:
+    """Načte z konfiguračního souboru cestu k logu, pokud existuje.
+
+    Pokud soubor nebo klíč neexistuje, nebo dojde k chybě, vrátí None.
+    """
+
+    try:
+        if not os.path.exists(CONFIG_FILE):
+            return None
+
+        with open(CONFIG_FILE, "r", encoding="utf-8") as f:
+            data = json.load(f)
+
+        path = data.get(CONFIG_KEY_LOGO_PATH)
+        if isinstance(path, str) and path:
+            return path
+    except Exception:
+        # Případné problémy s konfigem tiše ignorujeme a použijeme výchozí logo
+        return None
+
+    return None
+
+
+def _save_persistent_logo_path(path: str) -> None:
+    """Uloží zadanou cestu k logu do konfiguračního souboru.
+
+    Pokud zápis selže, chyba se nepropaguje do GUI (jen se neuloží konfigurace).
+    """
+
+    try:
+        data = {}
+        if os.path.exists(CONFIG_FILE):
+            try:
+                with open(CONFIG_FILE, "r", encoding="utf-8") as f:
+                    existing = json.load(f)
+                    if isinstance(existing, dict):
+                        data.update(existing)
+            except Exception:
+                # Poškozený nebo nečitelný soubor ignorujeme a přepíšeme novým obsahem
+                data = {}
+
+        data[CONFIG_KEY_LOGO_PATH] = path
+
+        with open(CONFIG_FILE, "w", encoding="utf-8") as f:
+            json.dump(data, f, ensure_ascii=False, indent=2)
+    except Exception:
+        # Konfig se nepodařilo uložit – aplikace to jen tiše ignoruje
+        pass
+
+
 def _nacist_logo_do_gui(cesta: str) -> tk.PhotoImage:
     """Načte obrázek loga a případně ho zmenší na rozumnou velikost pro GUI.
 
@@ -87,7 +143,15 @@ def _nacist_logo_do_gui(cesta: str) -> tk.PhotoImage:
     return zmensene
 
 
-# Logo v GUI (zmenšené na max. velikost)
+# Při startu se pokusíme načíst naposledy používané logo z konfiguračního souboru
+_persisted_logo = _load_persistent_logo_path()
+if _persisted_logo and os.path.exists(_persisted_logo):
+    PROTOCOL_LOGO_PATH = _persisted_logo
+elif not os.path.exists(PROTOCOL_LOGO_PATH):
+    # Pokud ani výchozí logo neexistuje, necháme PROTOCOL_LOGO_PATH na výchozí hodnotě
+    PROTOCOL_LOGO_PATH = DEFAULT_PROTOCOL_LOGO_PATH
+
+# Logo v GUI (zmenšené na max. velikost) podle aktuální hodnoty PROTOCOL_LOGO_PATH
 logo = _nacist_logo_do_gui(PROTOCOL_LOGO_PATH)
 
 
@@ -148,8 +212,9 @@ def zmenit_logo():
         mb.showerror(t("msg_logo_error_title"), f"{t('msg_logo_error_text')}\n\n{e}")
         return
 
-    # Aktualizace cesty pro protokol / grafy
+    # Aktualizace cesty pro protokol / grafy a uložení do konfigurace
     PROTOCOL_LOGO_PATH = soubor
+    _save_persistent_logo_path(PROTOCOL_LOGO_PATH)
 
     # Aktualizace loga v GUI
     logo = nove_logo
@@ -166,6 +231,7 @@ def obnovit_vychozi_logo():
     global PROTOCOL_LOGO_PATH, logo, logo_label
 
     PROTOCOL_LOGO_PATH = DEFAULT_PROTOCOL_LOGO_PATH
+    _save_persistent_logo_path(PROTOCOL_LOGO_PATH)
 
     try:
         nove_logo = _nacist_logo_do_gui(PROTOCOL_LOGO_PATH)
